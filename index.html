@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <input type="file" id="fileInput" accept=".csv, .xlsx" />
+<script>
+  document.getElementById('fileInput').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+
+    if (fileExtension === 'csv') {
+      parseCSV(file);
+    } else if (fileExtension === 'xlsx') {
+      parseXLSX(file);
+    } else {
+      alert('Formato de arquivo não suportado. Por favor, carregue um arquivo .csv ou .xlsx');
+    }
+  });
+
+  function parseCSV(file) {
+    Papa.parse(file, {
+      complete: function(results) {
+        const data = results.data.map(row => ({
+          codigo: row[0],
+          motivo: row[1]
+        }));
+        console.log(data);
+      },
+      header: false
+    });
+  }
+
+  function parseXLSX(file) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      const result = jsonData.map(row => ({
+        codigo: row[0],
+        motivo: row[1]
+      }));
+
+      console.log(result);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+</script>
+
+</body>
+</html>
